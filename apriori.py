@@ -1,6 +1,3 @@
-#Author:Chinagorom Mbaraonye
-#Apriori Algorithm
-
 from math import ceil
 from itertools import combinations
 from collections import defaultdict
