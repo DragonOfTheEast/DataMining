@@ -118,7 +118,7 @@ def output_to_file(clusters, string,data):
 
 
 def main():
-    data = get_input("assignment3_input.txt")
+    data = get_input("input.txt")
     ans = []
     points = [ ]
     start_time = time.time()
@@ -134,3 +134,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
