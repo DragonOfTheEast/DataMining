@@ -1,0 +1,149 @@
+# Import NumPy to use arrays
+import numpy as np
+import math
+import sys
+
+k = 10
+
+# This function returns the Euclidean distance between two data points x and y
+# param x: A data point
+# param y: A data point
+# return: The Euclidean distance between x and y
+def distance(x, y):
+    dis = 0
+    for i in range(len(x)):
+        dis += math.pow((float(x[i]) - float(y[i])), 2)
+    dis = math.sqrt(dis)
+    return dis
+
+# This function reads all data points from the input file and returns them in an array
+# param filename: The name of the input file
+# return: An array of data points
+def get_input_data(filename):
+    data = []
+    with open(filename) as file:
+        for i in file:
+            data.append((i[:-1].split('\t')))
+    # print(np.array(data[0]))
+    # print(data[0])
+    return np.array(data)
+
+
+# This function creates k initial clusters by partitioning the input data sequentially with equal size
+# param data: An array of data points
+# return: An array of initial clusters
+def generate_initial_clusters(data):
+    clusters = []
+    for i in range(0,len(data),int(len(data)/k)):
+        clusters.append(data[i:i+int(len(data)/k)])
+    return clusters
+
+
+# This function calculates the mean points of the current set of clusters and return them in an array
+# param clusters: An array of current clusters
+# return: An array of mean points of the clusters
+def calculate_means(clusters):
+    means = []
+    length = len(clusters)
+
+    #calculating means of clusters
+    for i in clusters:
+        tempMenas = []
+        for j in range(len(i[0])):
+            sum1 = 0
+            for n in range(len(i)):
+                sum1 += float(i[n][j])
+            tempMenas.append(float(format(sum1/len(i), '.4f')))
+        means.append(tempMenas)
+
+    return np.array(means)
+
+
+# This function generates a new set of clusters by assigning each data point to the nearest mean point
+# param means: An array of mean points
+# param data: An array of data points
+# return: An array of new clusters
+def generate_new_clusters(means, data):
+    clusters = [[] for _ in range(k)]
+
+    #getting new clusters
+    for i in data:
+        min = sys.float_info.max
+        min2 = 0
+        count = 0
+        for j in means:
+            dis = distance(i, j)
+            if dis < min:
+                min = dis
+                min2 = count
+            count +=1
+        clusters[min2].append(i)
+
+    return clusters
+
+
+# This function checks whether the new set of clusters have changed from the previous set of clusters
+# param oldClusters: An array of the previous set of clusters
+# param newClusters: An array of the new set of clusters
+# return: the boolean value
+def has_clusters_changed(oldClusters, newClusters):
+    for i in range(len(oldClusters)):
+        for j in oldClusters[i]:
+             if not any((j == x).all() for x in newClusters[i]):
+                 return True
+    return False
+
+# This function implements the k-means algorithm by taking the input data
+# It iteratively generates a new set of clusters until they do not change from the previous set of clusters
+# param data: An array of data points
+# return: An array of output clusters
+def extract_kmean_clusters(data):
+    old_clusters = generate_initial_clusters(data)
+    means = calculate_means(old_clusters)
+    new_clusters = generate_new_clusters(means, data)
+
+
+    #till no change in clusters
+    while has_clusters_changed(old_clusters, new_clusters):
+        old_clusters = new_clusters
+        means = calculate_means(old_clusters)
+        new_clusters = generate_new_clusters(means, data)
+
+    return new_clusters
+
+
+# This function writes the output clusters to a file, each cluster per line, following the format such as
+# 4 : { 1, 2, 5, 6 } where 4 is the total number of data points in the cluster
+# and { 1, 2, 5, 6 } represent the row numbers of the data points in the cluster
+# param filename: The output filename
+# param clusters: The output clusters
+# param input_data: An array of input data points
+def output_to_file(filename, clusters, input_data):
+    file = open(filename, 'w')
+
+    for i in clusters:
+        count = 0
+        file.write(str(len(i)) + ':{')
+        for j in i:
+            if count > 0:
+                file.write(',')
+            for n in range(len(input_data)):
+                if (j == input_data[n]).all():
+                    file.write(str(n))
+                    break
+            count += 1
+
+        file.write("}" + '\n')
+    file.close()
+
+# The main function
+def main():
+    input_filename = 'assignment2_input.txt'
+    output_filename = 'result.txt'
+    genes = get_input_data(input_filename)
+    gene_clusters = extract_kmean_clusters(genes)
+    output_to_file(output_filename,gene_clusters,genes)
+
+
+if __name__ == "__main__":
+    main()
